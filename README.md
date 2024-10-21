@@ -16,7 +16,7 @@ If you have issues / suggestions / notes / questions, please open an issue or co
 ### Extensions
 
 If you would like to use additional stiles, you can connect extensions.
-#### [qr-border-plugin](https://www.lefe.dev/marketplace/qr-border-plugin)
+#### [qr-border-plugin](https://www.npmjs.com/package/qr-border-plugin)
 
 <p float="left">
 <img style="display:inline-block" src="https://www.lefe.dev/_static/packages/qr-border-plugin-1.svg" width="240" />
@@ -83,6 +83,10 @@ npm install qr-code-styling
 
 [**Vue example (source)**](https://github.com/kozakdenys/qr-code-styling-examples/tree/master/examples/vue)
 
+[**Node.js example (source)**](https://github.com/kozakdenys/qr-code-styling-examples/tree/master/examples/nodejs)
+
+[**Next.js example (source)**](https://github.com/kozakdenys/qr-code-styling-examples/tree/master/examples/nextjs)
+
 ---
 
 ### API Documentation
@@ -123,13 +127,13 @@ errorCorrectionLevel|string (`'L' 'M' 'Q' 'H'`)                        |`'Q'`
 
 `options.imageOptions` structure
 
-Property          |Type                                   |Default Value|Description
-------------------|---------------------------------------|-------------|------------------------------------------------------------------------------
-hideBackgroundDots|boolean                                |`true`       |Hide all dots covered by the image
-imageSize         |number                                 |`0.4`        |Coefficient of the image size. Not recommended to use ove 0.5. Lower is better
-margin            |number                                 |`0`          |Margin of the image in px
-crossOrigin       |string(`'anonymous' 'use-credentials'`)|             |Set "anonymous" if you want to download QR code from other origins.
-saveAsBlob        |boolean                                |`false`      |Saves image as base64 blob in svg type, see bellow
+Property          |Type                                   | Default Value |Description
+------------------|---------------------------------------|---------------|------------------------------------------------------------------------------
+hideBackgroundDots|boolean                                | `true`        |Hide all dots covered by the image
+imageSize         |number                                 | `0.4`         |Coefficient of the image size. Not recommended to use ove 0.5. Lower is better
+margin            |number                                 | `0`           |Margin of the image in px
+crossOrigin       |string(`'anonymous' 'use-credentials'`)|               |Set "anonymous" if you want to download QR code from other origins.
+saveAsBlob        |boolean                                | `true`        |Saves image as base64 blob in svg type, see bellow
 
 When QR type is svg, the image may not load in certain applications as it is saved as a url, and some svg applications will not render url images for security reasons. Setting `saveAsBlob` to true will instead save the image as a blob, allowing it to render correctly in more places, but will also increase the file size.
 

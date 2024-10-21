@@ -1,4 +1,5 @@
 import calculateImageSize from "../tools/calculateImageSize";
+import toDataUrl from "../tools/toDataUrl";
 import errorCorrectionPercents from "../constants/errorCorrectionPercents";
 import QRDot from "../figures/dot/QRDot";
 import QRCornerSquare from "../figures/cornerSquare/QRCornerSquare";
@@ -6,7 +7,8 @@ import QRCornerDot from "../figures/cornerDot/QRCornerDot";
 import { RequiredOptions } from "./QROptions";
 import gradientTypes from "../constants/gradientTypes";
 import shapeTypes from "../constants/shapeTypes";
-import { QRCode, FilterFunction, Gradient, Window, Canvas } from "../types";
+import { QRCode, FilterFunction, Gradient, Window } from "../types";
+import { Image } from "canvas";
 
 const squareMask = [
   [1, 1, 1, 1, 1, 1, 1],
@@ -29,7 +31,6 @@ const dotMask = [
 ];
 
 export default class QRSVG {
-  _canvas?: Canvas;
   _window: Window;
   _element: SVGElement;
   _defs: SVGElement;
@@ -39,7 +40,7 @@ export default class QRSVG {
   _cornersDotClipPath?: SVGElement;
   _options: RequiredOptions;
   _qr?: QRCode;
-  _image?: HTMLImageElement;
+  _image?: HTMLImageElement | Image;
   _imageUri?: string;
   _instanceId: number;
 
@@ -58,16 +59,6 @@ export default class QRSVG {
     this._element.setAttribute("viewBox", `0 0 ${options.width} ${options.height}`);
     this._defs = this._window.document.createElementNS("http://www.w3.org/2000/svg", "defs");
     this._element.appendChild(this._defs);
-
-    if (options.imageOptions.saveAsBlob) {
-      if (options.nodeCanvas?.createCanvas) {
-        this._canvas = options.nodeCanvas.createCanvas(options.width, options.height);
-      } else {
-        this._canvas = document.createElement("canvas");
-      }
-      this._canvas.width = options.width;
-      this._canvas.height = options.height;
-    }
     this._imageUri = options.image;
     this._instanceId = QRSVG.instanceCount++;
     this._options = options;
@@ -103,7 +94,6 @@ export default class QRSVG {
       //We need it to get image size
       await this.loadImage();
       if (!this._image) return;
-      this.imageToBlob();
       const { imageOptions, qrOptions } = this._options;
       const coverLevel = imageOptions.imageSize * errorCorrectionPercents[qrOptions.errorCorrectionLevel];
       const maxHiddenDots = Math.floor(coverLevel * count * count);
@@ -456,17 +446,6 @@ export default class QRSVG {
     });
   }
 
-  imageToBlob(): void {
-    if (!this._image) return;
-    if (this._options.imageOptions.saveAsBlob && this._canvas) {
-      const ctx = this._canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(this._image, 0, 0, this._canvas.width, this._canvas.height);
-        this._imageUri = this._canvas.toDataURL("image/png");
-      }
-    }
-  }
-
   loadImage(): Promise<void> {
     return new Promise((resolve, reject) => {
       const options = this._options;
@@ -478,13 +457,13 @@ export default class QRSVG {
       if (options.nodeCanvas?.loadImage) {
         options.nodeCanvas
           .loadImage(options.image)
-          .then((image: HTMLImageElement) => {
-            // fix blurry svg
-            if (/(\.svg$)|(^data:image\/svg)/.test(options.image ?? "")) {
-              image.width = this._options.width;
-              image.height = this._options.height;
-            }
+          .then((image: Image) => {
             this._image = image;
+            if (this._options.imageOptions.saveAsBlob) {
+              const canvas = options.nodeCanvas?.createCanvas( this._image.width,  this._image.height);
+              canvas?.getContext('2d')?.drawImage(image, 0, 0);
+              this._imageUri = canvas?.toDataURL();
+            }
             resolve();
           })
           .catch(reject);
@@ -496,7 +475,10 @@ export default class QRSVG {
         }
 
         this._image = image;
-        image.onload = (): void => {
+        image.onload = async () => {
+          if (this._options.imageOptions.saveAsBlob) {
+            this._imageUri = await toDataUrl(options.image || "", this._window);
+          }
           resolve();
         };
         image.src = options.image;
